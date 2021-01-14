@@ -16,10 +16,10 @@ fn main() {
     let mut file = File::open(filename)
         .expect("file not found");
 
-    // read file
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
+    // read file as byte
+    let mut memory: Vec<u8> = Vec::new();
+    file.read_to_end(&mut memory)
         .expect("something went wrong reading the file");
 
-    println!("Contents:\n{}", contents);
+    println!("Contents:\n {:02x?}", &memory);
 }
