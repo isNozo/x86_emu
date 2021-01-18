@@ -20,18 +20,26 @@ struct Emulator {
     memory: Vec<u8>
 }
 
-fn create_emu() -> Emulator {
-    // create new instance
-    Emulator {
+fn create_emu(eip: u32, esp: u32) -> Emulator {
+    let mut emu = Emulator {
+        // Clear all resisters by 0
         registers: [0; RegisterCount as usize],
+        // Clear eflags by 0
         eflags: 0,
-        eip: 0,
+        // Init EIP register
+        eip: eip,
+        // Init memory
         memory: Vec::new()
-    }
+    };
+
+    // Init ESP register
+    emu.registers[ESP as usize] = esp;
+
+    emu
 }
 
 fn main() {
-    // read cmdline args
+    // Read filename from command args
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
         println!("usage: x86_emu filename");
@@ -39,12 +47,14 @@ fn main() {
     }
     let filename = &args[1];
 
-    // open file
+    // Open binary file
     let mut file = File::open(filename)
         .expect("file not found");
 
-    // read file as byte
-    let mut emu = create_emu();
+    // Create emulator with EIP=0x0000 and ESP=0x7c00
+    let mut emu = create_emu(0x0000, 0x7c00);
+    
+    // Read binary file into memory
     file.read_to_end(&mut emu.memory)
         .expect("something went wrong reading the file");
 
