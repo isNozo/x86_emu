@@ -7,11 +7,13 @@ use std::io::prelude::*;
 use Register::*;
 
 // starts at 0 (EAX=0)
-enum Register { EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI, RegisterCount }
+enum Register { EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI }
+const REGISTERS_COUNT: usize = 8;
+const REGISTERS_NAME: [&str; REGISTERS_COUNT] = ["EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"];
 
 struct Emulator {
     // General-purpose Registers
-    registers: [u32; RegisterCount as usize],
+    registers: [u32; REGISTERS_COUNT],
     // EFLAGS Register
     eflags: u32,
     // Instruction Pointer
@@ -23,7 +25,7 @@ struct Emulator {
 fn create_emu(eip: u32, esp: u32) -> Emulator {
     let mut emu = Emulator {
         // Clear all resisters by 0
-        registers: [0; RegisterCount as usize],
+        registers: [0; REGISTERS_COUNT],
         // Clear eflags by 0
         eflags: 0,
         // Init EIP register
@@ -36,6 +38,14 @@ fn create_emu(eip: u32, esp: u32) -> Emulator {
     emu.registers[ESP as usize] = esp;
 
     emu
+}
+
+// Dump general-purpose registers and EIP
+fn dump_registers(emu: &Emulator) {
+    for i in 0..REGISTERS_COUNT {
+        println!("{} = {:#010x}", REGISTERS_NAME[i], emu.registers[i]);
+    }
+    println!("EIP = {:#010x}", emu.eip);
 }
 
 fn main() {
@@ -58,5 +68,5 @@ fn main() {
     file.read_to_end(&mut emu.memory)
         .expect("something went wrong reading the file");
 
-    println!("Contents:\n {:02x?}", &emu.memory);
+    dump_registers(&emu);
 }
