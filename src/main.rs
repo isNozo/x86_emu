@@ -6,8 +6,9 @@ use std::fs::File;
 use std::io::prelude::*;
 use Register::*;
 
-// starts at 0 (EAX=0)
-enum Register { EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI }
+// General-purpose Registers Set
+// This enum is used as index to access registers[] field of Emulator
+enum Register { EAX=0, ECX, EDX, EBX, ESP, EBP, ESI, EDI }
 const REGISTERS_COUNT: usize = 8;
 const REGISTERS_NAME: [&str; REGISTERS_COUNT] = ["EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"];
 
@@ -22,6 +23,7 @@ struct Emulator {
     memory: Vec<u8>
 }
 
+// Create new instance of emulator with EIP and ESP
 fn create_emu(eip: u32, esp: u32) -> Emulator {
     let mut emu = Emulator {
         // Clear all resisters by 0
@@ -40,7 +42,7 @@ fn create_emu(eip: u32, esp: u32) -> Emulator {
     emu
 }
 
-// Dump general-purpose registers and EIP
+// Dump general-purpose registers and EIP values
 fn dump_registers(emu: &Emulator) {
     for i in 0..REGISTERS_COUNT {
         println!("{} = {:#010x}", REGISTERS_NAME[i], emu.registers[i]);
@@ -68,5 +70,6 @@ fn main() {
     file.read_to_end(&mut emu.memory)
         .expect("something went wrong reading the file");
 
+    // Stop program and dump registers
     dump_registers(&emu);
 }
