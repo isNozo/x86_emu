@@ -47,6 +47,12 @@ fn get_code8(emu: &Emulator, offset: usize) -> u8 {
     emu.memory[emu.eip as usize + offset]
 }
 
+// Initialize a instructions table
+const INSTRUCTIONS_COUNT: usize = 256;
+fn init_instructions(instructions: &mut [Option<fn(&mut Emulator)>; INSTRUCTIONS_COUNT]) {
+    instructions[0] = None;
+}
+
 // Dump general-purpose registers and EIP values
 fn dump_registers(emu: &Emulator) {
     for i in 0..REGISTERS_COUNT {
@@ -75,11 +81,27 @@ fn main() {
     file.read_to_end(&mut emu.memory)
         .expect("something went wrong reading the file");
 
+    // Initialize the x86 instructions table
+    // The None value in the instructions table indicates that instruction is not implemented
+    let mut instructions: [Option<fn(&mut Emulator)>; INSTRUCTIONS_COUNT]
+        = [None; INSTRUCTIONS_COUNT];
+    init_instructions(&mut instructions);
+
     // Emulation loop
     loop {
         // Read a instruction code
         let code: u8 = get_code8(&emu, 0);
         println!("EIP = {:#010x}, Code = {:#04x}", emu.eip, code);
+
+        match instructions[code as usize] {
+            // Execute the instruction
+            Some(inst) => inst(&mut emu),
+            // Stop the program if the instructin is not implemented
+            None => {
+                println!("\nNot Implemented: {:#04x}\n", code);
+                break;
+            }
+        }
 
         // Stop the program when EIP=0
         if emu.eip == 0x0000_0000 {
