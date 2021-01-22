@@ -47,9 +47,12 @@ fn get_code8(emu: &Emulator, offset: usize) -> u8 {
     emu.memory[emu.eip as usize + offset]
 }
 
-// Initialize a instructions table
+// The Instructions type is a function pointer array
 const INSTRUCTIONS_COUNT: usize = 256;
-fn init_instructions(instructions: &mut [Option<fn(&mut Emulator)>; INSTRUCTIONS_COUNT]) {
+type Instructoins = [Option<fn(&mut Emulator)>; INSTRUCTIONS_COUNT];
+
+// Initialize a instructions table
+fn init_instructions(instructions: &mut Instructoins) {
     instructions[0] = None;
 }
 
@@ -83,8 +86,7 @@ fn main() {
 
     // Initialize the x86 instructions table
     // The None value in the instructions table indicates that instruction is not implemented
-    let mut instructions: [Option<fn(&mut Emulator)>; INSTRUCTIONS_COUNT]
-        = [None; INSTRUCTIONS_COUNT];
+    let mut instructions: Instructoins = [None; INSTRUCTIONS_COUNT];
     init_instructions(&mut instructions);
 
     // Emulation loop
