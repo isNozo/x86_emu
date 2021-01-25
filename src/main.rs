@@ -81,7 +81,7 @@ fn short_jump(emu: &mut Emulator) {
     // Get a 8bit jump diff
     let diff = get_sign_code8(emu, 1);
     // Add the diff to the EIP register
-    emu.eip += (diff + 2) as u32;
+    emu.eip = emu.eip.wrapping_add((diff + 2) as u32);
 }
 
 // The Instructions type is a function pointer array
