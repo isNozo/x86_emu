@@ -42,9 +42,46 @@ fn create_emu(eip: u32, esp: u32) -> Emulator {
     emu
 }
 
-// Read a byte code from a emulator's memory
+/* 
+ * Read a byte code from a emulator's memory
+ */
 fn get_code8(emu: &Emulator, offset: usize) -> u8 {
     emu.memory[emu.eip as usize + offset]
+}
+
+fn get_sign_code8(emu: &Emulator, offset: usize) -> i8 {
+    emu.memory[emu.eip as usize + offset] as i8
+}
+
+fn get_code32(emu: &Emulator, offset: usize) -> u32 {
+    let mut ret: u32 = 0x0000_00000;
+    
+    // Get a 32bit data as little endian
+    for i in 0..4 {
+        ret |= (get_code8(emu, offset + i) as u32) << (i * 8);
+    }
+    ret
+}
+
+/* 
+ * Define x86 instructions
+ */
+fn mov_r32_imm32(emu: &mut Emulator) {
+    // Get a target register from opecode
+    let reg = get_code8(emu, 0) - 0xB8;
+    // Get 32bit immediate data from operand
+    let imm = get_code32(emu, 1);
+    // Set immediate data to the target register
+    emu.registers[reg as usize] = imm;
+    // Count up the EIP register
+    emu.eip += 5;
+}
+
+fn short_jump(emu: &mut Emulator) {
+    // Get a 8bit jump diff
+    let diff = get_sign_code8(emu, 1);
+    // Add the diff to the EIP register
+    emu.eip += (diff + 2) as u32;
 }
 
 // The Instructions type is a function pointer array
@@ -53,7 +90,11 @@ type Instructoins = [Option<fn(&mut Emulator)>; INSTRUCTIONS_COUNT];
 
 // Initialize a instructions table
 fn init_instructions(instructions: &mut Instructoins) {
-    instructions[0] = None;
+    for i in 0..8 {
+        instructions[0xB8 + i] = Some(mov_r32_imm32);
+    }
+
+    instructions[0xEB] = Some(short_jump);
 }
 
 // Dump general-purpose registers and EIP values
