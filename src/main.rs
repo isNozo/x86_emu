@@ -50,7 +50,7 @@ fn get_code8(emu: &Emulator, offset: usize) -> u8 {
 }
 
 fn get_sign_code8(emu: &Emulator, offset: usize) -> i8 {
-    emu.memory[emu.eip as usize + offset] as i8
+    get_code8(emu, offset) as i8
 }
 
 fn get_code32(emu: &Emulator, offset: usize) -> u32 {
@@ -61,6 +61,10 @@ fn get_code32(emu: &Emulator, offset: usize) -> u32 {
         ret |= (get_code8(emu, offset + i) as u32) << (i * 8);
     }
     ret
+}
+
+fn get_sign_code32(emu: &Emulator, offset: usize) -> i32 {
+    get_code32(emu, offset) as i32
 }
 
 /* 
@@ -84,6 +88,11 @@ fn short_jump(emu: &mut Emulator) {
     emu.eip = emu.eip.wrapping_add((diff + 2) as u32);
 }
 
+fn near_jump(emu: &mut Emulator) {
+    let diff = get_sign_code32(emu, 1);
+    emu.eip = emu.eip.wrapping_add((diff + 5) as u32);
+}
+
 // The Instructions type is a function pointer array
 const INSTRUCTIONS_COUNT: usize = 256;
 type Instructoins = [Option<fn(&mut Emulator)>; INSTRUCTIONS_COUNT];
@@ -94,6 +103,7 @@ fn init_instructions(instructions: &mut Instructoins) {
         instructions[0xB8 + i] = Some(mov_r32_imm32);
     }
 
+    instructions[0xE9] = Some(near_jump);
     instructions[0xEB] = Some(short_jump);
 }
 
