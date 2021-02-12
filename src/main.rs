@@ -3,6 +3,7 @@
 use std::env;
 use std::process;
 use std::fs::File;
+use std::io;
 use std::io::prelude::*;
 use Register::*;
 
@@ -12,6 +13,7 @@ enum Register { EAX=0, ECX, EDX, EBX, ESP, EBP, ESI, EDI }
 const REGISTERS_COUNT: usize = 8;
 const REGISTERS_NAME: [&str; REGISTERS_COUNT] = ["EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"];
 
+const MEMORY_SIZE: usize = 1024 * 1024;
 struct Emulator {
     // General-purpose Registers
     registers: [u32; REGISTERS_COUNT],
@@ -24,7 +26,7 @@ struct Emulator {
 }
 
 // Create a new instance of the emulator with EIP and ESP
-fn create_emu(eip: u32, esp: u32) -> Emulator {
+fn create_emu(mem_size: usize, eip: u32, esp: u32) -> Emulator {
     let mut emu = Emulator {
         // Clear all resisters by 0
         registers: [0; REGISTERS_COUNT],
@@ -33,7 +35,7 @@ fn create_emu(eip: u32, esp: u32) -> Emulator {
         // Init EIP register
         eip: eip,
         // Init memory
-        memory: Vec::new()
+        memory: vec![0; mem_size]
     };
 
     // Init ESP register
@@ -115,6 +117,20 @@ fn dump_registers(emu: &Emulator) {
     println!("EIP = {:#010x}", emu.eip);
 }
 
+const BIOS_OFFSET: usize = 0x7c00;
+
+// Read a file to the memory of the emulator
+fn read_to_memory(file: &mut File, emu: &mut Emulator) -> Result<usize, io::Error> {
+    let mut cnt = 0;
+
+    for byte in file.bytes() {
+        emu.memory[BIOS_OFFSET + cnt] = byte?;
+        cnt += 1;
+    }
+
+    Ok(cnt)
+}
+
 fn main() {
     // Read a filename from command argments
     let args: Vec<String> = env::args().collect();
@@ -128,11 +144,11 @@ fn main() {
     let mut file = File::open(filename)
         .expect("file not found");
 
-    // Create a emulator with EIP=0x0000_0000 and ESP=0x0000_7c00
-    let mut emu = create_emu(0x0000_0000, 0x0000_7c00);
+    // Create a emulator with EIP=0x0000_7c00 and ESP=0x0000_7c00
+    let mut emu = create_emu(MEMORY_SIZE, 0x0000_7c00, 0x0000_7c00);
     
     // Load the binary file into the emulator's memory
-    file.read_to_end(&mut emu.memory)
+    read_to_memory(&mut file, &mut emu)
         .expect("something went wrong reading the file");
 
     // Initialize the x86 instructions table
