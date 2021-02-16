@@ -7,6 +7,7 @@ use std::io::prelude::*;
 pub enum Register { EAX=0, ECX, EDX, EBX, ESP, EBP, ESI, EDI }
 pub const REGISTERS_COUNT: usize = 8;
 pub const REGISTERS_NAME: [&str; REGISTERS_COUNT] = ["EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"];
+pub const BIOS_OFFSET: usize = 0x7c00;
 
 pub struct Emulator {
     // General-purpose Registers
@@ -45,8 +46,6 @@ pub fn dump_registers(emu: &Emulator) {
     }
     println!("EIP = {:#010x}", emu.eip);
 }
-
-pub const BIOS_OFFSET: usize = 0x7c00;
 
 // Read a file to the memory of the emulator
 pub fn read_to_memory(file: &mut File, emu: &mut Emulator) -> Result<usize, io::Error> {
