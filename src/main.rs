@@ -3,6 +3,7 @@
 mod emulator;
 mod function;
 mod instruction;
+mod modrm;
 
 use std::env;
 use std::process;

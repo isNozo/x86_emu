@@ -1,5 +1,6 @@
 use crate::emulator::*;
 use crate::function::*;
+use crate::modrm::*;
 
 // The Instructions type is a function pointer array
 pub const INSTRUCTIONS_COUNT: usize = 256;
@@ -24,6 +25,14 @@ pub fn mov_r32_imm32(emu: &mut Emulator) {
     emu.registers[reg as usize] = imm;
     // Count up the EIP register
     emu.eip += 5;
+}
+
+pub fn mov_rm32_imm32(emu: &mut Emulator) {
+    emu.eip += 1;
+    let modrm = parse_modrm(emu);
+    let value = get_code32(emu, 0);
+    emu.eip += 4;
+    set_rm32(emu, &modrm, value);
 }
 
 pub fn short_jump(emu: &mut Emulator) {
